@@ -29,12 +29,6 @@ const opts = {
 
 const TWITTER_HANDLE = '_buildspace';
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
-const TEST_GIFS = [
-  'https://media2.giphy.com/media/ri46W3hZ4aF2q9KzQG/giphy.gif?cid=ecf05e47o6gslrfarjvrklh2ac3k1gp6dmrw7d3m6kwkpmi2&rid=giphy.gif&ct=g',
-  'https://media0.giphy.com/media/g01ZnwAUvutuK8GIQn/giphy.gif?cid=ecf05e47zlh9y839b4zx4znkvcmffm6ao2g7f0r4p8cgqvtw&rid=giphy.gif&ct=g',
-  'https://media0.giphy.com/media/NEvPzZ8bd1V4Y/giphy.gif?cid=ecf05e47aad0164697ffb72fa6199e7f2562e8c84fdc3168&rid=giphy.gif&ct=g',
-  'https://media4.giphy.com/media/a9A3HLylBz2yA/giphy.gif?cid=ecf05e47x542344cai54si3c5vidl6xdu17o151dpqiirpu2&rid=giphy.gif&ct=g',
-];
 
 const App = () => {
   const [walletAddress, setWalletAddress] = useState(null);
@@ -118,6 +112,28 @@ const App = () => {
     }
   };
 
+
+  const upvoteGif = async (i) => {
+    try {
+      const provider = getProvider();
+      const program = new Program(idl, programID, provider);
+
+      await program.rpc.upvoteGif(
+        i, 
+        {
+          accounts: {
+            baseAccount: baseAccount.publicKey,
+            user: provider.wallet.publicKey,
+          },
+        },
+      );
+
+      await getGifList();
+    } catch (error) {
+      console.log("Error sending GIF:", error)
+    }
+  };
+
   const createGifAccount = async () => {
     try {
       const provider = getProvider();
@@ -153,17 +169,6 @@ const App = () => {
     window.addEventListener('load', onLoad);
     return () => window.removeEventListener('load', onLoad);
   }, []);
-  
-  useEffect(() => {
-    if (walletAddress) {
-      console.log('Fetching GIF list...');
-      
-      // Call Solana program here.
-  
-      // Set state
-      setGifList(TEST_GIFS);
-    }
-  }, [walletAddress]);
 
   const renderNotConnectedContainer = () => (
     <button
@@ -208,6 +213,11 @@ const App = () => {
             {gifList.map((item, index) => (
               <div className="gif-item" key={index}>
                 <img src={item.gifLink} />
+                <p>{item.userAddress.toString()}</p>
+                <p>upVotes: {item.upvotes.toString()}</p>
+                <button className="cta-button upvote-gif-button" onClick={() => upvoteGif(index)}>
+                  upVote
+                </button>
               </div>
             ))}
           </div>
